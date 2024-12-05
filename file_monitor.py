@@ -3,6 +3,8 @@ import time
 from typing import Dict
 import difflib
 
+from core.producer import Producer
+
 
 class FileMonitorHandler:
     def __init__(self, broker: "Broker", root_directory: str, interval: float = 1.0) -> None:
@@ -14,6 +16,7 @@ class FileMonitorHandler:
         :param interval: Polling interval in seconds.
         """
         self.broker = broker
+        self.producer = Producer(broker)
         self.root_directory = root_directory
         self.interval = interval
         self.file_snapshots: Dict[str, str] = self._snapshot_directory()
@@ -52,32 +55,22 @@ class FileMonitorHandler:
             if previous_content is None:
                 # New file detected
                 print(f"New file detected: {file_path}")
-                self._publish_event(file_path, "", current_content)
+                self.producer.publish_event(file_path, "", current_content)
             elif current_content != previous_content:
                 # File modified
                 diff = self._generate_diff(previous_content, current_content)
                 print(f"File modified: {file_path}")
-                self._publish_event(file_path, diff, current_content)
+                self.producer.publish_event(file_path, diff, "")
 
         # Check for deleted files
         for file_path in list(self.file_snapshots.keys()):
             if file_path not in current_snapshot:
                 print(f"File deleted: {file_path}")
                 del self.file_snapshots[file_path]
+                self.producer.publish_event(file_path, "", "")
 
         # Update the snapshot
         self.file_snapshots = current_snapshot
-
-    def _publish_event(self, file_path: str, diff: str, current_content: str) -> None:
-        """
-        Publishes an event for a file change.
-
-        :param file_path: The relative path of the changed file.
-        :param diff: The diff of changes made to the file.
-        :param current_content: The current content of the file.
-        """
-        event = {"time": time.time(), "diff": diff, "content": current_content}
-        self.broker.publish(file_path, event)
 
     def _read_file(self, file_path: str) -> str:
         """

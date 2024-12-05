@@ -1,6 +1,8 @@
 from collections import defaultdict
 from typing import Dict, List
 
+from core.event import Event
+
 
 class Broker:
     def __init__(self) -> None:
@@ -10,7 +12,7 @@ class Broker:
         """Subscribe a consumer to a topic pattern."""
         self.subscriptions[topic_pattern].append(consumer)
 
-    def publish(self, topic: str, message: Dict) -> None:
+    def publish(self, topic: str, message: Event) -> None:
         """Publish a message to a topic."""
         for topic_pattern, consumers in self.subscriptions.items():
             if self._matches(topic, topic_pattern):

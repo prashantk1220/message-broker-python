@@ -1,8 +1,8 @@
 import unittest
 
-from typing import Dict
 from core.broker import Broker
 from core.consumer import Consumer
+from core.event import Event
 
 
 class TestBroker(unittest.TestCase):
@@ -10,7 +10,7 @@ class TestBroker(unittest.TestCase):
         self.broker = Broker()
         self.messages = []
 
-        def consumer_callback(topic: str, message: Dict):
+        def consumer_callback(topic: str, message: Event):
             self.messages.append((topic, message))
 
         self.consumer = Consumer("TestConsumer", consumer_callback)

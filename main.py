@@ -3,6 +3,7 @@ from typing import Dict
 
 from core.broker import Broker
 from core.consumer import Consumer
+from core.event import FileChangeEvent
 from file_monitor import FileMonitorHandler
 
 
@@ -11,24 +12,24 @@ broker = Broker()
 
 
 # Example consumer
-def print_changes(topic: str, message: Dict) -> None:
-    print(f"Change detected in {topic} at {time.ctime(message['time'])}")
-    print(f"Diff:\n{message['diff']}")
+def print_changes(topic: str, message: FileChangeEvent) -> None:
+    print(f"Change detected in {topic} at {time.ctime(message.time)}")
+    print(f"Diff:\n{message.diff}")
 
 
 consumer = Consumer("FileChangeLogger", print_changes)
 broker.subscribe(consumer, "~")
 
 
-def process_important_files(topic, message):
+def process_important_files(topic: str, message: FileChangeEvent):
     """Process changes to important files."""
-    print(f"[Important] {topic}: {message['diff']}")
+    print(f"[Important] {topic}: {message.diff}")
 
 
 def audit_all_files(topic, message):
     """Log changes to all files."""
     with open("audit.log", "a") as log_file:
-        log_file.write(f"{time.ctime(message['time'])}, {topic}\n")
+        log_file.write(f"{time.ctime(message.time)}, {topic}\n")
 
 
 # Important files consumer
